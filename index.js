@@ -51,20 +51,25 @@ HtmlWebpackPlugin.prototype.apply = function(compiler) {
 
 HtmlWebpackPlugin.prototype.emitHtml = function(compilation, htmlTemplateContent, templateParams, outputFilename) {
   var html;
+  // blueimp-tmpl processing
   try {
-   html = tmpl(htmlTemplateContent, templateParams);
+    html = tmpl(htmlTemplateContent, templateParams);
   } catch(e) {
+    html = "Template Error: " + e;
     compilation.errors.push(new Error('HtmlWebpackPlugin: template error ' + e));
   }
+ 
   // Inject link and script elements into an existing html file
   if (this.options.inject) {
     html = this.injectAssetsIntoHtml(html, templateParams);
   }
 
-  if (templateParams.htmlWebpackPlugin.options.minify) {
+  // Minify the html output
+  if (this.options.minify) {
     var minify = require('html-minifier').minify;
-    var minify_options = templateParams.htmlWebpackPlugin.options.minify.constructor === Object ? templateParams.htmlWebpackPlugin.options.minify : {};
-    html = minify(html, minify_options);
+    // If `options.minify` is set to true use the default minify options
+    var minifyOptions = _.isObject(this.options.minify) ? this.options.minify : {};
+    html = minify(html, minifyOptions);
   }
 
   compilation.assets[outputFilename] = {
